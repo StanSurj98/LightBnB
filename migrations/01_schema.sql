@@ -2,10 +2,10 @@
 -- Tips: Write in order of least FKs to most FKs
 
 -- TEST CODE: will drop tables on calling the schema file just to test
--- DROP TABLE IF EXISTS users CASCADE;
--- DROP TABLE IF EXISTS properties CASCADE;
--- DROP TABLE IF EXISTS reservations CASCADE;
--- DROP TABLE IF EXISTS property_reviews CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS properties CASCADE;
+DROP TABLE IF EXISTS reservations CASCADE;
+DROP TABLE IF EXISTS property_reviews CASCADE;
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY NOT NULL,
