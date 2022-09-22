@@ -45,7 +45,7 @@ VALUES
 );
 
 -- Property Reviews
-INSERT INTO property_reviews ( guest_id, property_id, reservations_id, rating, message )
+INSERT INTO property_reviews ( guest_id, property_id, reservation_id, rating, message )
 VALUES
 (
   3,             2,                1,        3, 'messages'
