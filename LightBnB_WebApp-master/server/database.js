@@ -19,16 +19,15 @@ const pool = new Pool({
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-  let user;
-  for (const userId in users) {
-    user = users[userId];
-    if (user.email.toLowerCase() === email.toLowerCase()) {
-      break;
-    } else {
-      user = null;
-    }
-  }
-  return Promise.resolve(user);
+  return pool
+    .query(`SELECT * FROM users WHERE email = $1`, [email])
+    .then((res) => {
+      if (!res.rows[0]) return null; // If user doesn't exist but not error yet
+
+      // console.log(res.rows[0])
+      return res.rows[0]; // User Object returned as promise
+    })
+    .catch(e => console.log(e.message));
 }
 exports.getUserWithEmail = getUserWithEmail;
 
@@ -38,7 +37,13 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function(id) {
-  return Promise.resolve(users[id]);
+  return pool.query(`SELECT * FROM users WHERE id = $1`, [id])
+    .then(res => {
+      console.log(res.rows[0]);
+      if (!res.rows[0]) return null;
+      return res.rows[0];
+    })
+    .catch(e => console.log(e.message))
 }
 exports.getUserWithId = getUserWithId;
 
@@ -49,10 +54,15 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser =  function(user) {
-  const userId = Object.keys(users).length + 1;
-  user.id = userId;
-  users[userId] = user;
-  return Promise.resolve(user);
+  return pool
+    .query(`
+    INSERT INTO users (name, email, password)
+    VALUES ($1, $3, $2)
+    RETURNING *;`, [user.name, user.password, user.email])
+    .then((res) => {
+      // console.log(res.rows[0]);
+      return res.rows[0];
+    }).catch(e => console.log(e.message));
 }
 exports.addUser = addUser;
 
@@ -82,7 +92,7 @@ const getAllProperties = function(options, limit = 10) {
     // !! IMPORTANT !! parameterize the query against SQL injections
     .query(`SELECT * FROM properties LIMIT $1`, [limit])
     .then((res) => {
-      console.log(res.rows);
+      // console.log(res.rows);
       // .then() always wraps our return in a promise object despite res.rows being an array of objects
       return res.rows;
       // because it is used in a .then() elsewhere in the app, which only accepts promise objects
