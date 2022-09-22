@@ -1,5 +1,15 @@
+// Dummy data from json/
 const properties = require('./json/properties.json');
 const users = require('./json/users.json');
+
+// Connecting to our PostgreSQL DB
+const { Pool } = require('pg');
+const pool = new Pool({
+  user: 'stanleysurjanto',
+  pass: '123',
+  host: 'localhost',
+  database: 'lightbnb'
+});
 
 /// Users
 
@@ -67,11 +77,17 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = function(options, limit = 10) {
-  const limitedProperties = {};
-  for (let i = 1; i <= limit; i++) {
-    limitedProperties[i] = properties[i];
-  }
-  return Promise.resolve(limitedProperties);
+  // !! NOTE !! need to return the pool.query promise chain
+  return pool
+    // !! IMPORTANT !! parameterize the query against SQL injections
+    .query(`SELECT * FROM properties LIMIT $1`, [limit])
+    .then((res) => {
+      console.log(res.rows);
+      // .then() always wraps our return in a promise object despite res.rows being an array of objects
+      return res.rows;
+      // because it is used in a .then() elsewhere in the app, which only accepts promise objects
+    })
+    .catch(e => console.log(e.message));
 }
 exports.getAllProperties = getAllProperties;
 
