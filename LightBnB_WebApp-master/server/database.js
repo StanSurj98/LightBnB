@@ -39,7 +39,7 @@ exports.getUserWithEmail = getUserWithEmail;
 const getUserWithId = function(id) {
   return pool.query(`SELECT * FROM users WHERE id = $1`, [id])
     .then(res => {
-      console.log(res.rows[0]);
+      // console.log(res.rows[0]);
       if (!res.rows[0]) return null;
       return res.rows[0];
     })
@@ -99,15 +99,50 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = function(options, limit = 10) {
+  // For options filtering in the search bar
+  const queryParams = [];
+  // A dynamic query that we will update as each option added through
+  let queryString = `
+  SELECT properties.*, AVG(property_reviews.rating) as average_rating
+  FROM properties
+  JOIN
+  property_reviews ON properties.id = property_id
+  `;
+  if (options.owner_id) {
+    console.log(options.owner_id)
+    queryParams.push(`${options.owner_id}`);
+    console.log(queryParams);
+    queryString += `WHERE properties.owner_id = $${queryParams.length}`;
+  }
+
+  if (options.city) {
+    // we push a "like" string, can access it as $index later
+    queryParams.push(`%${options.city}%`);
+    // string concat the query with the proper WHERE filter
+    queryString += `WHERE properties.city LIKE $${queryParams.length}`; // the $1 position
+  }
+
+  // Lastly we push in the limit parameter
+  queryParams.push(limit);
+  queryString += `
+  GROUP BY properties.id, properties.owner_id
+  ORDER BY cost_per_night
+  LIMIT $${queryParams.length};
+  `;
+
+  console.log(queryString, queryParams);
+  
+  
+  
+  
+  
   // !! NOTE !! need to return the pool.query promise chain
   return pool
     // !! IMPORTANT !! parameterize the query against SQL injections
-    .query(`SELECT * FROM properties LIMIT $1`, [limit])
+    .query(queryString, queryParams)
     .then((res) => {
-      // console.log(res.rows);
-      // .then() always wraps our return in a promise object despite res.rows being an array of objects
+      console.log(res.rows);
       return res.rows;
-      // because it is used in a .then() elsewhere in the app, which only accepts promise objects
     })
     .catch(e => console.log(e.message));
 }
